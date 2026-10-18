@@ -1,0 +1,32 @@
+{
+  "name": "yyssuresh/laravel-production-doctor",
+  "description": "A safe, read-only CLI health checker for Laravel production deployments.",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "ext-json": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.0 || ^12.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "LaravelProductionDoctor\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "LaravelProductionDoctor\\Tests\\": "tests/"
+    }
+  },
+  "bin": [
+    "bin/laravel-doctor"
+  ],
+  "scripts": {
+    "test": "phpunit",
+    "check": "php -l bin/laravel-doctor && find src tests -name '*.php' -print0 | xargs -0 -n1 php -l"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
