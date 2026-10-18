@@ -1,0 +1,41 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use LaravelProductionDoctor\Doctor;
+use LaravelProductionDoctor\Support\EnvFile;
+
+$autoload = dirname(__DIR__) . '/vendor/autoload.php';
+if (!is_file($autoload)) {
+    fwrite(STDERR, "Dependencies are not installed. Run: composer install\n");
+    exit(2);
+}
+require $autoload;
+
+$options = getopt('', ['path:', 'json', 'no-network', 'help']);
+if (isset($options['help'])) {
+    echo "Laravel Production Doctor\n\nUsage: laravel-doctor [--path=/path/to/laravel] [--json] [--no-network]\n\nRead-only diagnostics. Does not boot Laravel or modify files.\n";
+    exit(0);
+}
+$path = isset($options['path']) ? (string) $options['path'] : getcwd();
+if (!is_dir($path)) {
+    fwrite(STDERR, "Project path is not a directory.\n");
+    exit(2);
+}
+$doctor = new Doctor(realpath($path) ?: $path, !isset($options['no-network']));
+$report = $doctor->run();
+
+if (isset($options['json'])) {
+    echo json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+} else {
+    echo "Laravel Production Doctor\n" . str_repeat('=', 27) . "\n";
+    foreach ($report['checks'] as $check) {
+        $symbol = match ($check['status']) { 'pass' => '[PASS]', 'warning' => '[WARN]', 'fail' => '[FAIL]', default => '[SKIP]' };
+        printf("%-7s %s: %s\n", $symbol, $check['name'], $check['message']);
+        if (!empty($check['recommendation'])) printf("        Recommendation: %s\n", $check['recommendation']);
+    }
+    printf("\nSummary: %d passed, %d warnings, %d failed, %d skipped\n",
+        $report['summary']['pass'], $report['summary']['warning'], $report['summary']['fail'], $report['summary']['skip']);
+}
+exit($report['summary']['fail'] > 0 ? 1 : 0);

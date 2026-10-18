@@ -1,0 +1,27 @@
+name: Bug report
+description: Report a reproducible problem without sharing secrets.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include .env contents, credentials, tokens, application keys, or sensitive production details."
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Include the check name and sanitized output.
+    validations:
+      required: true
+  - type: input
+    id: php
+    attributes:
+      label: PHP version
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
