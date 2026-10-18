@@ -70,12 +70,25 @@ Unknown and duplicate options are rejected.
 - It does not execute the target application's `artisan` command or evaluate its `config/*.php` files.
 - A successful report does not guarantee application security or production readiness.
 
+
 ## Development
 
-Run syntax checks:
+Install dependencies:
+
+```bash
+composer install
+```
+
+Run PHP syntax checks:
 
 ```bash
 composer check
+```
+
+Run PHPStan static analysis:
+
+```bash
+composer analyse
 ```
 
 Run automated tests:
@@ -84,8 +97,26 @@ Run automated tests:
 composer test
 ```
 
+Run all local checks:
+
+```bash
+composer check && composer analyse && composer test
+```
+
 Validate Composer configuration:
 
 ```bash
 composer validate
 ```
+
+### Test coverage
+
+The automated tests cover:
+
+- CLI arguments, output, and exit codes
+- Diagnostic checks and environment-file parsing
+- Integration testing against a Laravel fixture
+- JSON report structure and validation against `docs/json-report-schema.json`
+- Rejection of invalid JSON reports
+
+The test suite runs in GitHub Actions on PHP 8.2, 8.3, and 8.4.
