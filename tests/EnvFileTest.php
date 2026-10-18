@@ -60,6 +60,46 @@ final class EnvFileTest extends TestCase
         self::assertSame('file-secret', $values['APP_KEY']);
     }
 
+
+    public function testUnterminatedQuoteDoesNotConsumeFollowingAssignments(): void
+    {
+        $values = EnvFile::parse("BROKEN=\"never closes\nAPP_ENV=production\nAPP_DEBUG=false\n");
+        self::assertArrayNotHasKey('BROKEN', $values);
+        self::assertSame('production', $values['APP_ENV']);
+        self::assertSame('false', $values['APP_DEBUG']);
+    }
+
+    public function testRejectsUnexpectedSuffixAfterQuotedValue(): void
+    {
+        $values = EnvFile::parse("APP_ENV=\"production\"junk\nAPP_DEBUG=false\n");
+        self::assertArrayNotHasKey('APP_ENV', $values);
+        self::assertSame('false', $values['APP_DEBUG']);
+    }
+
+    public function testCustomEnvironmentLookupDoesNotEnumerateRealProcessEnvironment(): void
+    {
+        $values = EnvFile::withProcessEnvironment(
+            ['APP_ENV' => 'file-value'],
+            [],
+            [],
+            static fn (string $key): string|false => false,
+        );
+        self::assertSame(['APP_ENV' => 'file-value'], $values);
+    }
+
+
+    public function testExplicitProcessEnvironmentSnapshotTakesPrecedence(): void
+    {
+        $values = EnvFile::withProcessEnvironment(
+            ['APP_ENV' => 'file-value'],
+            [],
+            [],
+            static fn (string $key): string|false => false,
+            ['APP_ENV' => 'snapshot-production'],
+        );
+        self::assertSame('snapshot-production', $values['APP_ENV']);
+    }
+
     public function testFileValuesAreUsedWhenNoProcessValueExists(): void
     {
         $values = EnvFile::withProcessEnvironment(

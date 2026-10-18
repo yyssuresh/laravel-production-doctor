@@ -192,6 +192,10 @@ final class Doctor
             return new CheckResult('Redis connectivity', 'skip', 'REDIS_HOST is not available from .env or the process environment.');
         }
 
+        if (!self::isSafeNetworkHost($host)) {
+            return new CheckResult('Redis connectivity', 'warning', 'REDIS_HOST is invalid for a TCP connectivity check; no connection was attempted.', 'Use a hostname or IP address only. URI schemes, paths, and other socket syntax are not supported.');
+        }
+
         $portString = trim($env['REDIS_PORT'] ?? '6379');
         if (!preg_match('/^[0-9]{1,5}$/', $portString)) {
             return new CheckResult('Redis connectivity', 'warning', 'REDIS_PORT is invalid.', 'Set REDIS_PORT to a valid TCP port.');
@@ -204,7 +208,10 @@ final class Doctor
         // Network access happens only after explicit --network opt-in.
         $errno = 0;
         $error = '';
-        $socket = @fsockopen($host, $port, $errno, $error, 1.5);
+        $socketHost = filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false
+            ? '[' . $host . ']'
+            : $host;
+        $socket = @fsockopen($socketHost, $port, $errno, $error, 1.5);
         if (is_resource($socket)) {
             fclose($socket);
             return new CheckResult('Redis connectivity', 'pass', 'Redis TCP endpoint is reachable; authentication, TLS, and command execution were not tested.');
@@ -216,6 +223,31 @@ final class Doctor
     private static function isAbsolutePath(string $path): bool
     {
         return str_starts_with($path, '/') || preg_match('/^[A-Za-z]:[\\\\\/]/', $path) === 1;
+    }
+
+    /** Accept IP literals and conventional DNS hostnames; reject stream-wrapper syntax. */
+    private static function isSafeNetworkHost(string $host): bool
+    {
+        if ($host === '' || preg_match('~[\x00-\x20\x7f\\\\/@?#]~', $host) === 1 || str_contains($host, '://')) {
+            return false;
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            return true;
+        }
+
+        $hostname = rtrim($host, '.');
+        if ($hostname === '' || strlen($hostname) > 253 || preg_match('/^[A-Za-z0-9.-]+$/', $hostname) !== 1) {
+            return false;
+        }
+
+        foreach (explode('.', $hostname) as $label) {
+            if ($label === '' || strlen($label) > 63 || preg_match('/^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/', $label) !== 1) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** @param list<CheckResult> $checks */

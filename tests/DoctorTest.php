@@ -55,6 +55,17 @@ final class DoctorTest extends TestCase
         self::assertStringNotContainsString('example-secret', json_encode($report));
     }
 
+
+    public function testRejectsRedisStreamWrapperHostBeforeConnecting(): void
+    {
+        file_put_contents($this->directory . '/.env', "APP_ENV=production\nAPP_DEBUG=false\nAPP_KEY=example-secret\nDB_CONNECTION=unknown\nREDIS_HOST=tcp://127.0.0.1\nREDIS_PORT=6379\n");
+        $report = (new Doctor($this->directory, true))->run();
+        $redis = $this->check($report, 'Redis connectivity');
+        self::assertSame('warning', $redis['status']);
+        self::assertStringContainsString('no connection was attempted', $redis['message']);
+        self::assertStringNotContainsString('example-secret', json_encode($report));
+    }
+
     public function testUsesInjectedEnvironmentValuesBeforeDotEnvValues(): void
     {
         file_put_contents($this->directory . '/.env', "APP_ENV=local\nAPP_DEBUG=true\nAPP_KEY=file-secret\nDB_CONNECTION=unknown\n");

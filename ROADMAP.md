@@ -1,22 +1,21 @@
 # Roadmap
 
-This roadmap describes possible work, not delivered functionality or promised release dates.
+This roadmap describes possible work, not committed guarantees.
 
-## Initial release
+## v0.2.0 — Safety and testability
 
-- [x] Read-only Laravel project detection
-- [x] Safe basic `.env` parsing
-- [x] Debug, environment, key-presence, PHP, extension, cache-file, and permission checks
-- [x] Optional database connection and Redis TCP reachability checks
-- [x] Human-readable and JSON output
-- [x] PHPUnit tests and GitHub Actions matrix
+- [x] Make database and Redis checks opt-in.
+- [x] Prefer process-injected environment values over `.env` values.
+- [x] Expand conservative `.env` parsing and add regression tests.
+- [x] Run syntax checks and PHPUnit across supported PHP versions in CI.
+- [ ] Confirm the complete test suite passes on GitHub Actions after the update is pushed.
 
-## Possible follow-up releases
+## Later
 
-- [ ] Add a broader dotenv compatibility test suite
-- [ ] Add optional HTTP/TLS checks for a user-supplied application URL
-- [ ] Add queue-worker and scheduler checks with documented integration requirements
-- [ ] Add SARIF or other CI report format if users request it
-- [ ] Publish signed release artifacts and package metadata after a stable release process is established
+- Add a fixture Laravel application for integration testing.
+- Add a testable check registry and clearer output severity policy.
+- Consider machine-readable schema/versioning for JSON output.
+- Add static analysis after selecting and documenting a supported toolchain.
+- Gather real maintainer and user feedback before expanding the diagnostic set.
 
-Features will be prioritized from real user reports and contributions. No adoption or release claims are implied by this roadmap.
+Do not report adoption, usage numbers, or compatibility claims without evidence.

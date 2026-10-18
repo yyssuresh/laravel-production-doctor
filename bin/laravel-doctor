@@ -14,7 +14,7 @@ require $autoload;
 
 $options = getopt('', ['path:', 'json', 'network', 'help']);
 if (isset($options['help'])) {
-    echo "Laravel Production Doctor v0.2\n\nUsage: laravel-doctor [--path=/path/to/laravel] [--json] [--network] [--help]\n\nRead-only diagnostics. Does not boot Laravel or modify files.\nNetwork connectivity checks are disabled by default; --network opts in to database/Redis connection attempts.\n";
+    echo "Laravel Production Doctor v0.2.1-dev\n\nUsage: laravel-doctor [--path=/path/to/laravel] [--json] [--network] [--help]\n\nRead-only diagnostics. Does not boot Laravel or modify files.\nNetwork connectivity checks are disabled by default; --network opts in to database/Redis connection attempts.\n";
     exit(0);
 }
 
@@ -41,7 +41,7 @@ if (isset($options['json'])) {
     }
     echo $json . PHP_EOL;
 } else {
-    echo "Laravel Production Doctor v0.2\n" . str_repeat('=', 31) . "\n";
+    echo "Laravel Production Doctor v0.2.1-dev\n" . str_repeat('=', 31) . "\n";
     foreach ($report['checks'] as $check) {
         $symbol = match ($check['status']) {
             'pass' => '[PASS]',

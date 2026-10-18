@@ -46,6 +46,12 @@ final class EnvFile
                 while (true) {
                     $closing = self::findClosingQuote($body, $quote);
                     if ($closing !== null) {
+                        $tail = trim(substr($body, $closing + 1));
+                        // After a quoted value, allow only whitespace or a comment.
+                        // Reject ambiguous suffixes instead of silently accepting them.
+                        if ($tail !== '' && !str_starts_with($tail, '#')) {
+                            break;
+                        }
                         $quotedValue = substr($body, 0, $closing);
                         $value = $quote === '"' ? self::decodeDoubleQuoted($quotedValue) : $quotedValue;
                         $closed = true;
@@ -53,6 +59,14 @@ final class EnvFile
                     }
 
                     if ($i + 1 >= $count) {
+                        break;
+                    }
+
+                    // Do not let an unterminated quote consume later dotenv assignments.
+                    // Multiline values remain supported when continuation lines are not
+                    // recognizable as a new KEY=value assignment.
+                    $nextLine = ltrim($lines[$i + 1]);
+                    if (preg_match('/^(?:export\s+)?[A-Za-z_][A-Za-z0-9_]*\s*=/', $nextLine) === 1) {
                         break;
                     }
 
@@ -95,6 +109,7 @@ final class EnvFile
      * @param array<string,mixed>|null $server
      * @param array<string,mixed>|null $environment
      * @param callable(string):string|false|null $getEnv
+     * @param array<string,mixed>|null $processEnvironment Explicit process values/keys for deterministic tests.
      * @return array<string,string>
      */
     public static function withProcessEnvironment(
@@ -102,13 +117,25 @@ final class EnvFile
         ?array $server = null,
         ?array $environment = null,
         ?callable $getEnv = null,
+        ?array $processEnvironment = null,
     ): array {
         $server ??= $_SERVER;
         $environment ??= $_ENV;
+        $customLookup = $getEnv !== null;
         $getEnv ??= static fn (string $key): string|false => getenv($key);
 
-        $processEnvironment = getenv();
-        $processKeys = is_array($processEnvironment) ? array_keys($processEnvironment) : [];
+        // When a lookup callback is injected, do not consult the real process
+        // environment for key discovery unless an explicit snapshot is supplied.
+        // This keeps tests hermetic and makes precedence deterministic.
+        if ($processEnvironment === null) {
+            if ($customLookup) {
+                $processEnvironment = [];
+            } else {
+                $actualEnvironment = getenv();
+                $processEnvironment = is_array($actualEnvironment) ? $actualEnvironment : [];
+            }
+        }
+        $processKeys = array_keys($processEnvironment);
         $keys = array_unique(array_merge(array_keys($fileValues), array_keys($server), array_keys($environment), $processKeys));
         $resolved = $fileValues;
 
@@ -120,6 +147,13 @@ final class EnvFile
             $value = $getEnv($key);
             if (is_string($value)) {
                 $resolved[$key] = $value;
+                continue;
+            }
+
+            if (array_key_exists($key, $processEnvironment)
+                && (is_string($processEnvironment[$key]) || is_numeric($processEnvironment[$key]) || is_bool($processEnvironment[$key]))) {
+                $rawProcessValue = $processEnvironment[$key];
+                $resolved[$key] = is_bool($rawProcessValue) ? ($rawProcessValue ? '1' : '0') : (string) $rawProcessValue;
                 continue;
             }
 
