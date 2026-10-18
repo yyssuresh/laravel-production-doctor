@@ -36,12 +36,15 @@
         "@php -l src/Doctor.php",
         "@php -l src/Support/EnvFile.php"
     ],
-    "check-tests": [
-        "@php -l tests/DoctorTest.php",
-        "@php -l tests/EnvFileTest.php",
-        "@php -l tests/CliTest.php",
-        "@php -l tests/FixtureIntegrationTest.php"
-    ]
+
+        "check-tests": [
+            "@php -l tests/DoctorTest.php",
+            "@php -l tests/EnvFileTest.php",
+            "@php -l tests/CliTest.php",
+            "@php -l tests/FixtureIntegrationTest.php",
+            "@php -l tests/JsonReportSchemaTest.php"
+        ]
+
 },
     "minimum-stability": "stable",
     "prefer-stable": true

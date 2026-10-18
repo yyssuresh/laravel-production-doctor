@@ -16,3 +16,76 @@ It is not intended to replace Laravel's first-party diagnostic tools or comprehe
 - Composer
 - A Laravel application directory containing `artisan` and `composer.json`
 - Appropriate PDO driver extensions for any database connectivity checks you explicitly enable
+
+
+## Usage
+
+Inspect a Laravel application directory:
+
+```bash
+php bin/laravel-doctor --path=/path/to/laravel-app
+```
+
+On Windows:
+
+```cmd
+php bin/laravel-doctor --path="C:\path\to\laravel-app"
+```
+
+### JSON output
+
+Generate a machine-readable diagnostic report:
+
+```bash
+php bin/laravel-doctor --path=/path/to/laravel-app --json
+```
+
+The JSON report contains project information, a generation timestamp, individual diagnostic results, and summary counts. Individual checks use the statuses `pass`, `warning`, `fail`, and `skip`.
+
+The report structure is documented in [`docs/json-report-schema.json`](docs/json-report-schema.json).
+
+### Network checks
+
+Database and Redis connectivity checks are disabled by default. Enable them explicitly when needed:
+
+```bash
+php bin/laravel-doctor --path=/path/to/laravel-app --network
+```
+
+**Warning:** This option attempts database and Redis connections. Use it only when you intend to perform those connectivity checks.
+
+### Exit codes
+
+| Exit code | Meaning |
+|---|---|
+| `0` | No failed checks |
+| `1` | One or more failed checks |
+| `2` | Invalid arguments or path, or runtime setup error |
+
+Unknown and duplicate options are rejected.
+
+### Safety and limitations
+
+- The tool is read-only and does not boot Laravel or modify application files.
+- It does not execute the target application's `artisan` command or evaluate its `config/*.php` files.
+- A successful report does not guarantee application security or production readiness.
+
+## Development
+
+Run syntax checks:
+
+```bash
+composer check
+```
+
+Run automated tests:
+
+```bash
+composer test
+```
+
+Validate Composer configuration:
+
+```bash
+composer validate
+```
