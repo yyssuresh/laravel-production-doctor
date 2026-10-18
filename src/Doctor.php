@@ -74,8 +74,12 @@ final class Doctor
         );
 
         $phpOk = PHP_VERSION_ID >= 80200;
-        $checks[] = new CheckResult('PHP version', $phpOk ? 'pass' : 'fail', 'CLI PHP version is ' . PHP_VERSION . '.', $phpOk ? null : 'Use PHP 8.2 or newer for this tool and verify the version required by your Laravel release.');
-
+        $checks[] = new CheckResult(
+            'PHP version',
+            $phpOk ? 'pass' : 'fail',
+            'CLI PHP version is ' . PHP_VERSION . '.',
+            $phpOk ? null : 'Use PHP 8.2 or newer for this tool and verify the version required by your Laravel release.',
+        );
         foreach (['ctype', 'filter', 'mbstring', 'openssl', 'pdo', 'tokenizer', 'xml'] as $extension) {
             $loaded = extension_loaded($extension);
             $checks[] = new CheckResult('PHP extension: ' . $extension, $loaded ? 'pass' : 'warning', $loaded ? 'Extension is loaded.' : 'Extension is not loaded.', $loaded ? null : 'Install/enable this extension if it is required by your Laravel application or dependencies.');

@@ -108,7 +108,7 @@ final class EnvFile
      * @param array<string,string> $fileValues
      * @param array<string,mixed>|null $server
      * @param array<string,mixed>|null $environment
-     * @param callable(string):string|false|null $getEnv
+     * @param (callable(string): (string|false))|null $getEnv
      * @param array<string,mixed>|null $processEnvironment Explicit process values/keys for deterministic tests.
      * @return array<string,string>
      */
@@ -132,7 +132,7 @@ final class EnvFile
                 $processEnvironment = [];
             } else {
                 $actualEnvironment = getenv();
-                $processEnvironment = is_array($actualEnvironment) ? $actualEnvironment : [];
+                $processEnvironment = $actualEnvironment;
             }
         }
         $processKeys = array_keys($processEnvironment);
