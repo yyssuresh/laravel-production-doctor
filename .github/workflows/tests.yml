@@ -31,6 +31,8 @@ jobs:
           path: ~/.composer/cache/files
           key: composer-${{ runner.os }}-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: composer-${{ runner.os }}-${{ matrix.php }}-
+      - name: Validate Composer configuration
+        run: composer validate --no-check-publish
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
       - name: Check PHP syntax
