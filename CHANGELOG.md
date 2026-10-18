@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — v0.3.0 development
+
+- Add a minimal Laravel-like fixture for diagnostic integration tests.
+- Add JSON report schema validation and regression coverage.
+- Integrate PHPStan static analysis into development checks and CI.
+- Add Composer configuration validation to CI.
+
 ## Unreleased — v0.2.1-rc.1 release candidate
 
 - Reject unknown and duplicate CLI options, missing `--path` values, and empty path values with exit code 2.
