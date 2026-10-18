@@ -1,21 +1,12 @@
-# Roadmap
+## v0.3.0 — Testability and extensibility
 
-This roadmap describes possible work, not committed guarantees.
+Planned work; scope may change based on maintainer feedback.
 
-## v0.2.0 — Safety and testability
+- Add a minimal Laravel fixture application for realistic integration tests.
+- Introduce a consistent, independently testable diagnostic check structure.
+- Document and test the JSON report schema.
+- Evaluate static analysis and integrate it into CI where compatible.
+- Preserve safe defaults: read-only diagnostics and network checks disabled unless explicitly enabled.
+- Gather feedback from real users before adding more production checks.
 
-- [x] Make database and Redis checks opt-in.
-- [x] Prefer process-injected environment values over `.env` values.
-- [x] Expand conservative `.env` parsing and add regression tests.
-- [x] Run syntax checks and PHPUnit across supported PHP versions in CI.
-- [ ] Confirm the complete test suite passes on GitHub Actions after the update is pushed.
-
-## Later
-
-- Add a fixture Laravel application for integration testing.
-- Add a testable check registry and clearer output severity policy.
-- Consider machine-readable schema/versioning for JSON output.
-- Add static analysis after selecting and documenting a supported toolchain.
-- Gather real maintainer and user feedback before expanding the diagnostic set.
-
-Do not report adoption, usage numbers, or compatibility claims without evidence.
+Do not claim compatibility, adoption, or usage figures without supporting evidence.
