@@ -1,0 +1,3 @@
+<?php
+
+// Minimal Laravel fixture marker for integration tests.

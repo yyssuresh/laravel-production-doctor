@@ -1,0 +1,5 @@
+{
+    "name": "tests/laravel-fixture",
+    "description": "Minimal Laravel-shaped fixture for diagnostic integration tests.",
+    "type": "project"
+}
