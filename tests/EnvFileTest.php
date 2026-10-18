@@ -17,11 +17,57 @@ final class EnvFileTest extends TestCase
         self::assertSame('localhost', $values['DB_HOST']);
     }
 
-    public function testParsesQuotedValuesWithoutEvaluatingExpressions(): void
+    public function testParsesQuotedValuesAndKeepsHashInsideQuotes(): void
     {
-        $values = EnvFile::parse("APP_NAME=\"Production App\"\nAPP_KEY='base64:abc== '\nDANGEROUS=$(touch /tmp/not-run)\n");
-        self::assertSame('Production App', $values['APP_NAME']);
+        $values = EnvFile::parse("APP_NAME=\"Production # App\"\nAPP_KEY='base64:abc== '\nPASSWORD=plain#hash\n");
+        self::assertSame('Production # App', $values['APP_NAME']);
         self::assertSame('base64:abc== ', $values['APP_KEY']);
+        self::assertSame('plain#hash', $values['PASSWORD']);
+    }
+
+    public function testDecodesDoubleQuotedEscapesAndMultilineValues(): void
+    {
+        $values = EnvFile::parse("MESSAGE=\"line one\\nline two\"\nCERT='first line\nsecond line'\n");
+        self::assertSame("line one\nline two", $values['MESSAGE']);
+        self::assertSame("first line\nsecond line", $values['CERT']);
+    }
+
+    public function testIgnoresMalformedQuotedValues(): void
+    {
+        $values = EnvFile::parse("APP_ENV=production\nBROKEN=\"never closes");
+        self::assertSame('production', $values['APP_ENV']);
+        self::assertArrayNotHasKey('BROKEN', $values);
+    }
+
+    public function testDoesNotEvaluateShellExpressions(): void
+    {
+        $values = EnvFile::parse("DANGEROUS=$(touch /tmp/not-run)\nexport APP_ENV=production\n");
         self::assertSame('$(touch /tmp/not-run)', $values['DANGEROUS']);
+        self::assertSame('production', $values['APP_ENV']);
+    }
+
+    public function testProcessEnvironmentOverridesFileValues(): void
+    {
+        $values = EnvFile::withProcessEnvironment(
+            ['APP_ENV' => 'local', 'APP_DEBUG' => 'true', 'APP_KEY' => 'file-secret'],
+            ['APP_ENV' => 'server'],
+            ['APP_ENV' => 'env-array'],
+            static fn (string $key): string|false => $key === 'APP_ENV' ? 'injected-production' : false,
+        );
+
+        self::assertSame('injected-production', $values['APP_ENV']);
+        self::assertSame('true', $values['APP_DEBUG']);
+        self::assertSame('file-secret', $values['APP_KEY']);
+    }
+
+    public function testFileValuesAreUsedWhenNoProcessValueExists(): void
+    {
+        $values = EnvFile::withProcessEnvironment(
+            ['APP_ENV' => 'production'],
+            [],
+            [],
+            static fn (string $key): string|false => false,
+        );
+        self::assertSame('production', $values['APP_ENV']);
     }
 }

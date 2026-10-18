@@ -9,6 +9,7 @@ Please report security issues privately to the maintainer through the contact ro
 - The tool does not boot Laravel or execute application configuration files.
 - Environment values are parsed as data; they are never evaluated as PHP or shell commands.
 - Reports intentionally omit secret values and suppress raw connection exceptions.
-- Network checks are opt-out with `--no-network`; they connect only to endpoints configured in the inspected environment file.
-- Database DSN delimiters are rejected before attempting a connection.
+- Database and Redis connectivity checks are disabled by default. The operator must pass `--network` to opt in to contacting configured endpoints.
+- Database DSN delimiters/control characters are rejected before attempting a connection.
+- Network timeout behavior depends partly on the PDO driver, DNS resolution, and operating system; `--network` should only be used when the operator intends to contact the target services.
 - Run the tool against staging first and review the code before using it in production.
