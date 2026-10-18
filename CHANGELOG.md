@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — v0.2.1-rc.1 release candidate
+
+- Reject unknown and duplicate CLI options, missing `--path` values, and empty path values with exit code 2.
+- Support both `--path=/directory` and `--path /directory`.
+- Add CLI subprocess integration tests for help, JSON, network opt-in, invalid paths, unknown arguments, and exit codes.
+- Document strict argument validation and exit-code behavior.
+
+
 ## Unreleased (v0.2.1 development)
 
 - Reject malformed quoted dotenv values that have unexpected suffixes or would consume later assignments.

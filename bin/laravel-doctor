@@ -5,6 +5,66 @@ declare(strict_types=1);
 
 use LaravelProductionDoctor\Doctor;
 
+const VERSION = '0.2.1-rc.1';
+
+/** @return never */
+function usageError(string $message): never
+{
+    fwrite(STDERR, $message . PHP_EOL . 'Run `php bin/laravel-doctor --help` for usage.' . PHP_EOL);
+    exit(2);
+}
+
+/** @return array{path:?string,json:bool,network:bool,help:bool} */
+function parseArguments(array $arguments): array
+{
+    $options = ['path' => null, 'json' => false, 'network' => false, 'help' => false];
+    $seen = [];
+    $count = count($arguments);
+
+    for ($i = 1; $i < $count; $i++) {
+        $argument = $arguments[$i];
+        if ($argument === '--help') {
+            $name = 'help';
+        } elseif ($argument === '--json') {
+            $name = 'json';
+        } elseif ($argument === '--network') {
+            $name = 'network';
+        } elseif ($argument === '--path' || str_starts_with($argument, '--path=')) {
+            $name = 'path';
+            if ($argument === '--path') {
+                if (!isset($arguments[$i + 1]) || str_starts_with($arguments[$i + 1], '--')) {
+                    usageError('Option --path requires a directory argument.');
+                }
+                $value = $arguments[++$i];
+            } else {
+                $value = substr($argument, strlen('--path='));
+            }
+            if ($value === '') {
+                usageError('Option --path requires a non-empty directory argument.');
+            }
+            $options['path'] = $value;
+        } else {
+            usageError('Unknown argument: ' . $argument);
+        }
+
+        if (isset($seen[$name])) {
+            usageError('Option --' . $name . ' may only be supplied once.');
+        }
+        $seen[$name] = true;
+        if ($name !== 'path') {
+            $options[$name] = true;
+        }
+    }
+
+    return $options;
+}
+
+$options = parseArguments($argv);
+if ($options['help']) {
+    echo "Laravel Production Doctor v" . VERSION . "\n\nUsage: laravel-doctor [--path=/path/to/laravel] [--json] [--network] [--help]\n\nRead-only diagnostics. Does not boot Laravel or modify files.\nNetwork connectivity checks are disabled by default; --network opts in to database/Redis connection attempts.\nUnknown and duplicate options are rejected. Exit codes: 0=no failed checks, 1=one or more failed checks, 2=invalid arguments/path or runtime setup error.\n";
+    exit(0);
+}
+
 $autoload = dirname(__DIR__) . '/vendor/autoload.php';
 if (!is_file($autoload)) {
     fwrite(STDERR, "Dependencies are not installed. Run: composer install\n");
@@ -12,14 +72,8 @@ if (!is_file($autoload)) {
 }
 require $autoload;
 
-$options = getopt('', ['path:', 'json', 'network', 'help']);
-if (isset($options['help'])) {
-    echo "Laravel Production Doctor v0.2.1-dev\n\nUsage: laravel-doctor [--path=/path/to/laravel] [--json] [--network] [--help]\n\nRead-only diagnostics. Does not boot Laravel or modify files.\nNetwork connectivity checks are disabled by default; --network opts in to database/Redis connection attempts.\n";
-    exit(0);
-}
-
-$path = isset($options['path']) ? (string) $options['path'] : getcwd();
-if (!is_dir($path)) {
+$path = $options['path'] ?? getcwd();
+if (!is_string($path) || !is_dir($path)) {
     fwrite(STDERR, "Project path is not a directory.\n");
     exit(2);
 }
@@ -30,10 +84,10 @@ if ($resolvedPath === false) {
     exit(2);
 }
 
-$doctor = new Doctor($resolvedPath, isset($options['network']));
+$doctor = new Doctor($resolvedPath, $options['network']);
 $report = $doctor->run();
 
-if (isset($options['json'])) {
+if ($options['json']) {
     $json = json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     if ($json === false) {
         fwrite(STDERR, "Could not encode report as JSON.\n");
@@ -41,7 +95,7 @@ if (isset($options['json'])) {
     }
     echo $json . PHP_EOL;
 } else {
-    echo "Laravel Production Doctor v0.2.1-dev\n" . str_repeat('=', 31) . "\n";
+    echo "Laravel Production Doctor v" . VERSION . "\n" . str_repeat('=', 31) . "\n";
     foreach ($report['checks'] as $check) {
         $symbol = match ($check['status']) {
             'pass' => '[PASS]',
@@ -56,7 +110,7 @@ if (isset($options['json'])) {
     }
     printf("\nSummary: %d passed, %d warnings, %d failed, %d skipped\n",
         $report['summary']['pass'], $report['summary']['warning'], $report['summary']['fail'], $report['summary']['skip']);
-    if (!isset($options['network'])) {
+    if (!$options['network']) {
         echo "Network checks were not run. Use --network only when you intend to contact configured services.\n";
     }
 }

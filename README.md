@@ -2,7 +2,7 @@
 
 A lightweight, read-only command-line diagnostic tool for Laravel deployment directories. It inspects common production configuration risks and emits a human-readable report or JSON suitable for CI.
 
-> **Status: v0.2.1 development update (not yet released).** Test in a disposable or staging environment first. This tool is not a substitute for a security audit, monitoring, or a full Laravel boot test.
+> **Status: v0.2.1-rc.1 release candidate (not yet released).** Test in a disposable or staging environment first. This tool is not a substitute for a security audit, monitoring, or a full Laravel boot test.
 
 ## What makes this tool different?
 
@@ -38,6 +38,9 @@ php bin/laravel-doctor --path=/absolute/path/to/your-laravel-app --json
 
 # Explicitly opt in to database and Redis connectivity attempts
 php bin/laravel-doctor --path=/absolute/path/to/your-laravel-app --network
+
+# Show supported options
+php bin/laravel-doctor --help
 ```
 
 Network checks are **disabled by default**. Use `--network` only when you intend to contact services configured for the target application and have permission to do so. The tool does not authenticate to Redis or issue Redis commands; it only checks TCP reachability. Database connection checks are best-effort and can generate warnings when the service is unreachable or the relevant PDO driver is unavailable.
@@ -69,11 +72,19 @@ The parser supports ordinary `KEY=value` assignments, optional `export`, inline 
 - File permission semantics vary by operating system and deployment model.
 - The tool does not inspect live HTTP headers, TLS certificates, queue workers, scheduler health, or migration status.
 
+## CLI arguments
+
+Only `--path`, `--json`, `--network`, and `--help` are accepted. Unknown arguments, duplicate options, a missing `--path` value, and an empty `--path=` value are rejected with exit code `2`. `--path=/directory` and `--path /directory` are both supported. `--help` prints usage and exits successfully.
+
 ## Exit codes
 
 - `0`: no failed checks (warnings may still exist)
 - `1`: one or more failed checks
 - `2`: invalid path, missing dependencies, or report encoding failure
+
+## Release-candidate validation
+
+The release-candidate test suite includes subprocess integration tests for help output, JSON output, safe default network behavior, explicit `--network`, invalid paths, unknown and duplicate arguments, and diagnostic exit codes. These tests run in CI after Composer dependencies are installed.
 
 ## Development
 
